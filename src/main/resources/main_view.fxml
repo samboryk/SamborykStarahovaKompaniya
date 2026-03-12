@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<SplitPane dividerPositions="0.23557692307692304" prefHeight="600.0" prefWidth="1000.0" style="-fx-background-color: #2C3E50;" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="MainController">
+    <items>
+        <VBox prefHeight="546.0" prefWidth="232.0" spacing="10.0" style="-fx-background-color: #1e1e1e;">
+            <padding><Insets bottom="20" left="20" right="20" top="20" /></padding>
+            <Label style="-fx-font-weight: bold; -fx-font-size: 16;" text="Новий договір" textFill="WHITE">
+            <font>
+               <Font name="HelveticaNeueCyr-Black" size="12.0" />
+            </font></Label>
+            <Label prefWidth="184.0" text="Дата укладання:" textFill="WHITE">
+            <font>
+               <Font name="HelveticaNeueCyr-Black" size="12.0" />
+            </font></Label>
+            <DatePicker fx:id="datePicker" prefWidth="Infinity" />
+            <Label text="Сума страхування:" textFill="WHITE">
+            <font>
+               <Font name="HelveticaNeueCyr-Black" size="12.0" />
+            </font></Label>
+            <TextField fx:id="txtAmount" onKeyReleased="#handleCalculatePremium" promptText="Введіть суму">
+            <font>
+               <Font name="HelveticaNeueCyr-Black" size="12.0" />
+            </font></TextField>
+            <Label text="Тарифна ставка (%):" textFill="WHITE">
+            <font>
+               <Font name="HelveticaNeueCyr-Black" size="12.0" />
+            </font></Label>
+            <TextField fx:id="txtRate" onKeyReleased="#handleCalculatePremium" promptText="Введіть ставку">
+            <font>
+               <Font name="HelveticaNeueCyr-Black" size="12.0" />
+            </font></TextField>
+            <Label text="Страхова премія:" textFill="WHITE">
+            <font>
+               <Font name="HelveticaNeueCyr-Black" size="12.0" />
+            </font></Label>
+            <Label fx:id="lblPremium" style="-fx-font-weight: bold;" text="0.00" textFill="#ecf0f1">
+            <font>
+               <Font name="HelveticaNeueCyr-Black" size="12.0" />
+            </font></Label>
+            <Label text="Філія:" textFill="WHITE">
+            <font>
+               <Font name="HelveticaNeueCyr-Black" size="12.0" />
+            </font></Label>
+            <ComboBox fx:id="comboBranch" prefWidth="Infinity" />
+            <Label text="Вид страхування:" textFill="WHITE">
+            <font>
+               <Font name="HelveticaNeueCyr-Black" size="12.0" />
+            </font></Label>
+            <ComboBox fx:id="comboType" prefWidth="Infinity" />
+            <Button onAction="#handleSaveContract" prefWidth="Infinity" style="-fx-background-color: #4CAF50; -fx-text-fill: white;" text="Зберегти договір">
+            <font>
+               <Font name="HelveticaNeueCyr-Black" size="12.0" />
+            </font></Button>
+            <Button onAction="#handleExport" prefWidth="Infinity" text="Експорт у .txt">
+            <font>
+               <Font name="HelveticaNeueCyr-Black" size="12.0" />
+            </font></Button>
+        </VBox>
+        <VBox prefHeight="598.0" prefWidth="457.0" spacing="10.0" style="-fx-background-color: #1e1e1e;">
+            <padding><Insets bottom="10" left="10" right="10" top="10" /></padding>
+            <HBox alignment="CENTER_LEFT" spacing="10.0">
+                <TextField fx:id="txtSearch" promptText="Пошук..." style="-fx-background-color: ECF0F1;" HBox.hgrow="ALWAYS" />
+                <ComboBox fx:id="comboFilterBranch" promptText="Фільтр філії" />
+            </HBox>
+            <TableView fx:id="tableContracts" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="colId" prefWidth="50" text="№" />
+                    <TableColumn fx:id="colDate" prefWidth="100" text="Дата" />
+                    <TableColumn fx:id="colAmount" prefWidth="120" text="Сума" />
+                    <TableColumn fx:id="colRate" prefWidth="80" text="Ставка" />
+                    <TableColumn fx:id="colBranch" prefWidth="150" text="Філія" />
+                    <TableColumn fx:id="colType" prefWidth="150" text="Вид" />
+                </columns>
+            </TableView>
+        </VBox>
+    </items>
+</SplitPane>

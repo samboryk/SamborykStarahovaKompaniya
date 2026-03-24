@@ -1,4 +1,7 @@
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
@@ -14,13 +17,15 @@ public class MainController {
     @FXML private TableColumn<Contract, Double> colAmount, colRate;
     @FXML private TableColumn<Contract, String> colBranch, colType;
 
-    @FXML private TextField txtAmount, txtRate;
+    @FXML private TextField txtAmount, txtRate, txtSearch;
     @FXML private Label lblPremium;
     @FXML private DatePicker datePicker;
-    @FXML private ComboBox<Branch> comboBranch;
+    @FXML private ComboBox<Branch> comboBranch, comboFilterBranch;
     @FXML private ComboBox<InsuranceType> comboType;
 
     private ContractDAO dao = new ContractDAO();
+
+    private ObservableList<Contract> masterData = FXCollections.observableArrayList();
 
     @FXML
     public void initialize() {
@@ -33,7 +38,23 @@ public class MainController {
 
         comboBranch.setItems(dao.getBranches());
         comboType.setItems(dao.getTypes());
-        refreshTable();
+        comboFilterBranch.setItems(dao.getBranches());
+
+        masterData.setAll(dao.getAllContracts());
+
+        FilteredList<Contract> filteredData = new FilteredList<>(masterData, p -> true);
+
+        txtSearch.textProperty().addListener((observable, oldValue, newValue) -> {
+            filteredData.setPredicate(contract -> matchFilters(contract, newValue, comboFilterBranch.getValue()));
+        });
+
+        comboFilterBranch.valueProperty().addListener((observable, oldValue, newValue) -> {
+            filteredData.setPredicate(contract -> matchFilters(contract, txtSearch.getText(), newValue));
+        });
+
+        SortedList<Contract> sortedData = new SortedList<>(filteredData);
+        sortedData.comparatorProperty().bind(tableContracts.comparatorProperty());
+        tableContracts.setItems(sortedData);
 
         txtAmount.textProperty().addListener((obs, old, newVal) -> {
             if (!newVal.matches("\\d*(\\.\\d*)?")) txtAmount.setText(old);
@@ -41,6 +62,22 @@ public class MainController {
         txtRate.textProperty().addListener((obs, old, newVal) -> {
             if (!newVal.matches("\\d*(\\.\\d*)?")) txtRate.setText(old);
         });
+    }
+
+
+    private boolean matchFilters(Contract contract, String searchText, Branch filterBranch) {
+        boolean matchBranch = filterBranch == null || contract.getBranchName().equals(filterBranch.getName());
+
+        if (searchText == null || searchText.isEmpty()) {
+            return matchBranch;
+        }
+
+        String lowerCaseFilter = searchText.toLowerCase();
+        boolean matchSearch = String.valueOf(contract.getId()).contains(lowerCaseFilter) ||
+                contract.getTypeName().toLowerCase().contains(lowerCaseFilter) ||
+                contract.getBranchName().toLowerCase().contains(lowerCaseFilter);
+
+        return matchBranch && matchSearch;
     }
 
     @FXML
@@ -61,30 +98,39 @@ public class MainController {
             Branch selectedBranch = comboBranch.getValue();
             InsuranceType selectedType = comboType.getValue();
 
+
             if (date == null || date.isAfter(LocalDate.now())) {
-                System.out.println("Помилка: Некоректна дата!");
+                showAlert(Alert.AlertType.WARNING, "Помилка валідації", "Дата укладання договору не може бути порожньою або з майбутнього!");
                 return;
             }
 
-            if (selectedBranch == null || selectedType == null || txtAmount.getText().isEmpty()) {
-                System.out.println("Помилка: Заповніть усі поля!");
+            if (selectedBranch == null || selectedType == null || txtAmount.getText().isEmpty() || txtRate.getText().isEmpty()) {
+                showAlert(Alert.AlertType.WARNING, "Помилка валідації", "Будь ласка, заповніть усі поля перед збереженням!");
                 return;
             }
 
             double amount = Double.parseDouble(txtAmount.getText());
             double rate = Double.parseDouble(txtRate.getText());
 
+
             dao.addContract(date, amount, rate, selectedBranch.getId(), selectedType.getId());
 
-            tableContracts.setItems(dao.getAllContracts());
+
+            refreshTable();
+
+
+            showAlert(Alert.AlertType.INFORMATION, "Успіх", "Новий договір успішно додано до бази!");
 
         } catch (NumberFormatException e) {
-            System.out.println("Помилка: Введіть числові значення у поля Сума та Ставка!");
+            showAlert(Alert.AlertType.ERROR, "Помилка вводу", "Введіть числові значення у поля 'Сума страхування' та 'Тарифна ставка'!");
+        } catch (Exception e) {
+            showAlert(Alert.AlertType.ERROR, "Помилка", "Сталася помилка при збереженні: " + e.getMessage());
         }
     }
 
     private void refreshTable() {
-        tableContracts.setItems(dao.getAllContracts());
+
+        masterData.setAll(dao.getAllContracts());
     }
 
     @FXML
@@ -92,7 +138,7 @@ public class MainController {
         ObservableList<Contract> data = tableContracts.getItems();
 
         if (data.isEmpty()) {
-            System.out.println("Немає даних для експорту!");
+            showAlert(Alert.AlertType.WARNING, "Експорт", "Немає даних для експорту!");
             return;
         }
 
@@ -115,17 +161,19 @@ public class MainController {
                 ));
             }
 
-            System.out.println("Експорт успішно завершено у файл: " + file.getAbsolutePath());
-
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Експорт");
-            alert.setHeaderText(null);
-            alert.setContentText("Дані успішно збережено у файл contracts_export.txt");
-            alert.showAndWait();
+            showAlert(Alert.AlertType.INFORMATION, "Експорт", "Дані успішно збережено у файл:\n" + file.getAbsolutePath());
 
         } catch (IOException e) {
-            System.err.println("Помилка при записі у файл: " + e.getMessage());
+            showAlert(Alert.AlertType.ERROR, "Помилка запису", "Не вдалося зберегти файл: " + e.getMessage());
             e.printStackTrace();
         }
+    }
+
+    private void showAlert(Alert.AlertType type, String title, String content) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 }

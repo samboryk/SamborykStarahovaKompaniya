@@ -10,7 +10,7 @@ public class Main extends Application {
         FXMLLoader loader = new FXMLLoader(getClass().getResource("/main_view.fxml"));
         Parent root = loader.load();
 
-        primaryStage.setTitle("Система обліку «СТРАХОВА КОМПАНІЯ»");
+        primaryStage.setTitle("СТРАХОВА КОМПАНІЯ SAMBORYK");
         primaryStage.setScene(new Scene(root, 1000, 600));
         primaryStage.show();
     }

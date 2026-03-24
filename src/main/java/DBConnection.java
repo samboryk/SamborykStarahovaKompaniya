@@ -5,8 +5,8 @@ public class DBConnection {
 
     public static Connection getConnection() throws SQLException {
         if (connection == null || connection.isClosed()) {
-            String url = "jdbc:mysql://localhost:3306/insurance_company";
-            connection = DriverManager.getConnection(url, "root", "nersiqdima");
+            String url = "jdbc:mysql://localhost:3306/insurance_db";
+            connection = DriverManager.getConnection(url, "root", "123456");
         }
         return connection;
     }
